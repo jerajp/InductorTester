@@ -37,7 +37,7 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern uint32_t PulseCounter;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -60,6 +60,17 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
+#define TEST1_Pin GPIO_PIN_14
+#define TEST1_GPIO_Port GPIOC
+#define COMP_IN_Pin GPIO_PIN_5
+#define COMP_IN_GPIO_Port GPIOB
+#define COMP_IN_EXTI_IRQn EXTI9_5_IRQn
+#define MOS_GATE_Pin GPIO_PIN_6
+#define MOS_GATE_GPIO_Port GPIOB
+#define LCD_CLK_Pin GPIO_PIN_7
+#define LCD_CLK_GPIO_Port GPIOB
+#define LCD_DIO_Pin GPIO_PIN_8
+#define LCD_DIO_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

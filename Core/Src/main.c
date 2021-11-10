@@ -42,7 +42,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint32_t test1;
+uint32_t PulseCounter;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,6 +88,11 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
+  tm1637Init();
+  // Optionally set brightness. 0 is off. By default, initialized to full brightness.
+  tm1637SetBrightness(5);
+  // Display the value "1234" and turn on the `:` that is between digits 2 and 3.
+  tm1637DisplayDecimal(1234, 0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -97,6 +103,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	tm1637DisplayDecimal(PulseCounter, 0);
 	HAL_Delay(100);
   }
   /* USER CODE END 3 */
@@ -153,16 +160,44 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LED_Pin|TEST1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LED_Pin */
-  GPIO_InitStruct.Pin = LED_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, MOS_GATE_Pin|LCD_CLK_Pin|LCD_DIO_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : LED_Pin TEST1_Pin */
+  GPIO_InitStruct.Pin = LED_Pin|TEST1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : COMP_IN_Pin */
+  GPIO_InitStruct.Pin = COMP_IN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(COMP_IN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : MOS_GATE_Pin */
+  GPIO_InitStruct.Pin = MOS_GATE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(MOS_GATE_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LCD_CLK_Pin LCD_DIO_Pin */
+  GPIO_InitStruct.Pin = LCD_CLK_Pin|LCD_DIO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 

@@ -42,7 +42,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+uint32_t testcount=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -189,6 +189,18 @@ void SysTick_Handler(void)
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
+  testcount++;
+  if(testcount==500)	PulseCounter=0;
+  else if(testcount>=500 && testcount<1000)
+  {
+	  HAL_GPIO_WritePin(MOS_GATE_GPIO_Port, MOS_GATE_Pin,GPIO_PIN_SET);
+  }
+  else if(testcount>1000)
+  {
+	  HAL_GPIO_WritePin(MOS_GATE_GPIO_Port, MOS_GATE_Pin,GPIO_PIN_RESET);
+	  testcount=0;
+  }
+
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -198,6 +210,20 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles EXTI line[9:5] interrupts.
+  */
+void EXTI9_5_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+
+  /* USER CODE END EXTI9_5_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
+  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+  PulseCounter++;
+  /* USER CODE END EXTI9_5_IRQn 1 */
+}
 
 /* USER CODE BEGIN 1 */
 
