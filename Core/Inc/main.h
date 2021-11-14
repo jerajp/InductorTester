@@ -38,6 +38,9 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 extern uint32_t PulseCounter;
+extern uint32_t InductorNotConnected;
+extern TIM_HandleTypeDef htim1;
+extern uint32_t watch1,watch2,watch3,watch4;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -47,6 +50,11 @@ extern uint32_t PulseCounter;
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+
+#define TEST1_ON  GPIOC->BSRR|=0x00004000  		//C14  1 << (14)
+#define TEST1_OFF GPIOC->BSRR|=0x40000000     	//C14  1 << (16+14)
+#define COMP_PIN_READ GPIOB->IDR&0x00000020
+#define TIM50MS	5000	//TIM1 count 10us
 
 /* USER CODE END EM */
 

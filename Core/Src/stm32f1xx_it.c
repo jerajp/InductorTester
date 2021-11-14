@@ -190,11 +190,27 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   testcount++;
-  if(testcount==500)	PulseCounter=0;
-  else if(testcount>=500 && testcount<1000)
+
+  //0-500ms Capacitor charge cycle
+
+  if(testcount==499)//enable before MOS switch
+  {
+	  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+	  HAL_TIM_Base_Start(&htim1);
+	  PulseCounter=0;
+  }
+  else if(testcount>=500 && testcount<1000) //LC connected in parallel
   {
 	  HAL_GPIO_WritePin(MOS_GATE_GPIO_Port, MOS_GATE_Pin,GPIO_PIN_SET);
+
+	  if(testcount==750) //Allow 250ms measuring window
+	  {
+		  HAL_TIM_Base_Stop(&htim1);
+		  TIM1->CNT=0; //reset count
+		  HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);// to avoid end spike trigger on MOS switch
+	  }
   }
+
   else if(testcount>1000)
   {
 	  HAL_GPIO_WritePin(MOS_GATE_GPIO_Port, MOS_GATE_Pin,GPIO_PIN_RESET);
@@ -217,11 +233,42 @@ void SysTick_Handler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-
+  TEST1_ON;
   /* USER CODE END EXTI9_5_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
-  PulseCounter++;
+
+  EXTI->PR|=0x20; //Set 1 to Pending bit 5 (IT on GPIO B5, Hall IRQ handler is too slow)
+
+  static uint32_t PulseStart;
+  static uint32_t PulseStop;
+  uint32_t Rising=0;
+  uint32_t Falling=0;
+
+  if(COMP_PIN_READ)
+  {
+	  PulseStart=TIM1->CNT;
+	  watch1++;
+	  watch3=PulseStart;
+	  Rising=1;
+  }
+  else
+  {
+	  PulseStop=TIM1->CNT;
+	  watch2++;
+	  watch4=PulseStop;
+	  Falling=1;
+  }
+
+  if( (PulseStart < PulseStop) && ((PulseStop-PulseStart) > TIM50MS) ) //HW->100ms Pulses when No inductor connected
+  {
+	  InductorNotConnected=1;
+  }
+  else
+  {
+	  if(Rising)PulseCounter++;
+	  InductorNotConnected=0;
+  }
+  TEST1_OFF;
   /* USER CODE END EXTI9_5_IRQn 1 */
 }
 
