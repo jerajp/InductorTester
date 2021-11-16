@@ -38,8 +38,9 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 extern uint32_t PulseCounter;
-extern uint32_t InductorNotConnected;
-extern TIM_HandleTypeDef htim1;
+extern uint32_t InductorConnected;
+extern uint32_t Inductance_uH;
+extern TIM_HandleTypeDef htim1,htim2;
 extern uint32_t watch1,watch2,watch3,watch4;
 /* USER CODE END ET */
 
@@ -54,7 +55,10 @@ extern uint32_t watch1,watch2,watch3,watch4;
 #define TEST1_ON  GPIOC->BSRR|=0x00004000  		//C14  1 << (14)
 #define TEST1_OFF GPIOC->BSRR|=0x40000000     	//C14  1 << (16+14)
 #define COMP_PIN_READ GPIOB->IDR&0x00000020
-#define TIM50MS	5000	//TIM1 count 10us
+#define TIMCOUNTINUS	1	//TIM1 count 1us
+#define CONST	25.33  //1000/(pi²*2²)
+#define CAP_NF 399 //measured 470nF cap
+#define NOLOADTIME 5000	//10us timer *counts = 50ms timeout - on no inductor the capacitor discharge lasts >50ms and then triggers falling edge
 
 /* USER CODE END EM */
 
@@ -70,6 +74,8 @@ void Error_Handler(void);
 #define LED_GPIO_Port GPIOC
 #define TEST1_Pin GPIO_PIN_14
 #define TEST1_GPIO_Port GPIOC
+#define TIPKA_Pin GPIO_PIN_3
+#define TIPKA_GPIO_Port GPIOB
 #define COMP_IN_Pin GPIO_PIN_5
 #define COMP_IN_GPIO_Port GPIOB
 #define COMP_IN_EXTI_IRQn EXTI9_5_IRQn

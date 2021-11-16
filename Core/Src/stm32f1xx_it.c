@@ -43,6 +43,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 uint32_t testcount=0;
+uint32_t PulseDelta=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -197,6 +198,7 @@ void SysTick_Handler(void)
   {
 	  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 	  HAL_TIM_Base_Start(&htim1);
+	  HAL_TIM_Base_Start(&htim2);
 	  PulseCounter=0;
   }
   else if(testcount>=500 && testcount<1000) //LC connected in parallel
@@ -206,11 +208,14 @@ void SysTick_Handler(void)
 	  if(testcount==750) //Allow 250ms measuring window
 	  {
 		  HAL_TIM_Base_Stop(&htim1);
+		  HAL_TIM_Base_Stop(&htim2);
 		  TIM1->CNT=0; //reset count
+		  TIM2->CNT=0; //reset count
 		  HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);// to avoid end spike trigger on MOS switch
+
+		  Inductance_uH=(PulseDelta*PulseDelta*TIMCOUNTINUS*TIMCOUNTINUS*CONST)/(CAP_NF);
 	  }
   }
-
   else if(testcount>1000)
   {
 	  HAL_GPIO_WritePin(MOS_GATE_GPIO_Port, MOS_GATE_Pin,GPIO_PIN_RESET);
@@ -233,42 +238,29 @@ void SysTick_Handler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-  TEST1_ON;
+
+  static uint32_t PulseTimingHist;
+
   /* USER CODE END EXTI9_5_IRQn 0 */
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
-  EXTI->PR|=0x20; //Set 1 to Pending bit 5 (IT on GPIO B5, Hall IRQ handler is too slow)
+  EXTI->PR|=0x20; //Set 1 to Pending bit 5 (IT on GPIO B5, Hall IRQ handler is slow)
 
-  static uint32_t PulseStart;
-  static uint32_t PulseStop;
-  uint32_t Rising=0;
-  uint32_t Falling=0;
+  //Make sure it's falling IT, some false rising edge triggers..
+  if(!(COMP_PIN_READ))
+  {
+	  TEST1_ON;
 
-  if(COMP_PIN_READ)
-  {
-	  PulseStart=TIM1->CNT;
-	  watch1++;
-	  watch3=PulseStart;
-	  Rising=1;
-  }
-  else
-  {
-	  PulseStop=TIM1->CNT;
-	  watch2++;
-	  watch4=PulseStop;
-	  Falling=1;
-  }
+	  PulseCounter++;
+	  if(PulseCounter==1 && TIM2->CNT > NOLOADTIME )InductorConnected=0;
+	  else InductorConnected=1;
 
-  if( (PulseStart < PulseStop) && ((PulseStop-PulseStart) > TIM50MS) ) //HW->100ms Pulses when No inductor connected
-  {
-	  InductorNotConnected=1;
+	  if(PulseCounter==2)PulseDelta=TIM1->CNT-PulseTimingHist; //Check time delte of first 2 pulses to calculate inductance
+
+	  PulseTimingHist=TIM1->CNT;
+
+	  TEST1_OFF;
   }
-  else
-  {
-	  if(Rising)PulseCounter++;
-	  InductorNotConnected=0;
-  }
-  TEST1_OFF;
   /* USER CODE END EXTI9_5_IRQn 1 */
 }
 

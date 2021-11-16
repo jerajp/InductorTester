@@ -47,14 +47,30 @@ void tm1637Init(void)
     tm1637SetBrightness(8);
 }
 
-void tm1637DisplayDecimal(int v, int displaySeparator)
+void tm1637DisplayDecimal(int v,int Dot0,int Dot1,int Dot2,int Dot3)
 {
     unsigned char digitArr[4];
     for (int i = 0; i < 4; ++i) {
         digitArr[i] = segmentMap[v % 10];
-        if (i == 2 && displaySeparator) {
+
+        //show dots
+        if (i == 0 && Dot3 ) {
             digitArr[i] |= 1 << 7;
         }
+
+        if (i == 1 && Dot2 ) {
+            digitArr[i] |= 1 << 7;
+        }
+
+        if (i == 2 && Dot1 ) {
+            digitArr[i] |= 1 << 7;
+        }
+
+        if (i == 3 && Dot0 ) {
+            digitArr[i] |= 1 << 7;
+        }
+
+
         v /= 10;
     }
 
